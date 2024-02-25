@@ -69,7 +69,7 @@
             var scene = new BABYLON.Scene(engine);
 
             // This creates and positions a free camera (non-mesh)
-            var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+            var camera = new BABYLON.ArcRotateCamers("camera1", -Math.PI / 2, Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
 
             // This targets the camera to scene origin
             camera.setTarget(BABYLON.Vector3.Zero());
@@ -82,6 +82,7 @@
 
             // Default intensity is 1. Let's dim the light a small amount
             light.intensity = 0.7;
+            light.diffuse = new BABYLON.Color3(1, 0, 0);
 
             // Our built-in 'sphere' shape.
             var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, scene);
@@ -94,7 +95,7 @@
 
             console.log("Made it here");
 
-            // initialize plugin
+            // Initialize Havok Physics plugin
             var havokInstance = await HavokPhysics();
             var hk = new BABYLON.HavokPlugin(true, havokInstance);
             // enable physics in the scene with a gravity
@@ -105,6 +106,16 @@
 
             // Create a static box shape.
             var groundAggregate = new BABYLON.PhysicsAggregate(ground, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene);
+
+            //Skybox
+            var skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
+            var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
+            skyboxMaterial.backFaceCulling = false;
+            skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("textures/skybox", scene);
+            skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+            skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+            skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+            skybox.material = skyboxMaterial;
 
             //WebXR Helpers
             scene.createDefaultEnvironment();
