@@ -6,7 +6,6 @@
 
     <title>Open Platform for Testing XR Web Apps</title>
 
-    <!-- Babylon.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
     <script src="https://assets.babylonjs.com/generated/Assets.js"></script>
     <script src="https://cdn.babylonjs.com/recast.js"></script>
@@ -137,28 +136,28 @@
 
             // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             //WebXR Helpers - Can only be served over HTTPS. Disable this during development.
-            // scene.createDefaultEnvironment();
-            // const xrHelper = await scene.createDefaultXRExperienceAsync();
-            const sessionManager = new WebXRSessionManager(scene);
-            const sessionSupported = await WebXRSessionManager.IsSessionSupportedAsync('immersive-vr');
-            if (!supported) {
-                console.log("WebXR Session not supported");
-            };
-            sessionManager.initializeSessionAsync('immersive-vr' /*, xrSessionInit */);
-            const referenceSpace = sessionManager.setReferenceSpaceTypeAsync( /*referenceSpaceType = 'local-floor'*/);
-            const renderTarget = sessionManager.getWebXRRenderTarget( /*outputCanvasOptions: WebXRManagedOutputCanvasOptions*/);
-            const xrWebGLLayer = renderTarget.initializeXRLayerAsync(this.sessionManager.session);
-            sessionManager.runXRRenderLoop();
-            // height change - move the reference space negative 2 units (up two units):
-            const heightChange = new XRRigidTransform({
-                x: 0,
-                y: -18,
-                z: 0
-            });
-            // get a new reference space object using the current reference space
-            const newReferenceSpace = xrSession.referenceSpace.getOffsetReferenceSpace(heightChange);
-            // update the session manager to start using the new space:
-            xrSession.referenceSpace = newReferenceSpace;
+            scene.createDefaultEnvironment();
+            const xrHelper = await scene.createDefaultXRExperienceAsync();
+            // const sessionManager = new WebXRSessionManager(scene);
+            // const sessionSupported = await WebXRSessionManager.IsSessionSupportedAsync('immersive-vr');
+            // if (!supported) {
+            //     console.log("WebXR Session not supported");
+            // };
+            // sessionManager.initializeSessionAsync('immersive-vr' /*, xrSessionInit */);
+            // const referenceSpace = sessionManager.setReferenceSpaceTypeAsync( /*referenceSpaceType = 'local-floor'*/);
+            // const renderTarget = sessionManager.getWebXRRenderTarget( /*outputCanvasOptions: WebXRManagedOutputCanvasOptions*/);
+            // const xrWebGLLayer = renderTarget.initializeXRLayerAsync(this.sessionManager.session);
+            // sessionManager.runXRRenderLoop();
+            // // height change - move the reference space negative 2 units (up two units):
+            // const heightChange = new XRRigidTransform({
+            //     x: 0,
+            //     y: -18,
+            //     z: 0
+            // });
+            // // get a new reference space object using the current reference space
+            // const newReferenceSpace = xrSession.referenceSpace.getOffsetReferenceSpace(heightChange);
+            // // update the session manager to start using the new space:
+            // xrSession.referenceSpace = newReferenceSpace;
             // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
             return scene;
