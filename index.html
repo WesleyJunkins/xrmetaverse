@@ -69,10 +69,10 @@
             var scene = new BABYLON.Scene(engine);
 
             // This creates and positions a universal camera (non-mesh)
-            var camera = new BABYLON.UniversalCamera("Camera1", new BABYLON.Vector3(0, 2, 0), scene);
+            var camera = new BABYLON.UniversalCamera("Camera1", new BABYLON.Vector3(0, 4, 0), scene);
 
             // This targets the camera to look outward
-            camera.setTarget(new BABYLON.Vector3(0, 1, 10));
+            camera.setTarget(new BABYLON.Vector3(0, 3, 10));
 
             // This attaches the camera to the canvas
             camera.attachControl(canvas, true);
@@ -84,15 +84,22 @@
             light.intensity = 0.7;
 
             // Our built-in 'sphere' shape.
-            var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.5, segments: 32 }, scene);
+            var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.7, segments: 32 }, scene);
             let sphereMaterial = new BABYLON.StandardMaterial("Sphere Material", scene);
             sphere.material = sphereMaterial;
             let sphereTexture = new BABYLON.Texture("./textures/rockn.png", scene);
             sphere.material.diffuseTexture = sphereTexture;
+            sphere.position.y = 6;
+            sphere.position.z = 5;
 
-            // Move the sphere upward at 4 units and out 10 units
-            sphere.position.y = 4;
-            sphere.position.z = 4;
+            // Create a cylinder
+            const cylinder = BABYLON.MeshBuilder.CreateCylinder("cylinder", { height: 3 });
+            let cylinderMaterial = new BABYLON.StandardMaterial("Cylinder Material", scene);
+            cylinder.material = cylinderMaterial;
+            let cylinderTexture = new BABYLON.Texture("./textures/albedo.png", scene);
+            cylinder.material.diffuseTexture = cylinderTexture;
+            cylinder.position.y = 1.5;
+            cylinder.position.z = 5;
 
             // Our built-in 'ground' shape.
             var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene);
@@ -101,6 +108,7 @@
             let groundTexture = new BABYLON.Texture("./textures/albedo.png", scene);
             ground.material.diffuseTexture = groundTexture;
 
+            // PHYSICS ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             // Initialize Havok Physics plugin
             var havokInstance = await HavokPhysics();
             var hk = new BABYLON.HavokPlugin(true, havokInstance);
@@ -108,10 +116,14 @@
             scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), hk);
 
             // Create a sphere shape and the associated body. Size will be determined automatically.
-            var sphereAggregate = new BABYLON.PhysicsAggregate(sphere, BABYLON.PhysicsShapeType.SPHERE, { mass: 1, restitution: 0.75 }, scene);
+            var sphereAggregate = new BABYLON.PhysicsAggregate(sphere, BABYLON.PhysicsShapeType.SPHERE, { mass: 1, restitution: 0.6 }, scene);
+
+            // Create a cylinder shape
+            var cylinderAggregate = new BABYLON.PhysicsAggregate(cylinder, BABYLON.PhysicsShapeType.CYLINDER, { mass: 0, restitution: 0 }, scene);
 
             // Create a static box shape.
             var groundAggregate = new BABYLON.PhysicsAggregate(ground, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene);
+            // PHYSICS ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
             //Skybox
             var skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
@@ -123,9 +135,11 @@
             skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
             skybox.material = skyboxMaterial;
 
+            // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             //WebXR Helpers - Can only be served over HTTPS. Disable this during development.
-            // scene.createDefaultEnvironment();
-            // const xrHelper = await scene.createDefaultXRExperienceAsync();
+            scene.createDefaultEnvironment();
+            const xrHelper = await scene.createDefaultXRExperienceAsync();
+            // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
             return scene;
         };
