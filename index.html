@@ -107,12 +107,11 @@
             let groundTexture = new BABYLON.Texture("./textures/albedo.png", scene);
             ground.material.diffuseTexture = groundTexture;
 
-            // PHYSICS ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-            // Initialize Havok Physics plugin
             var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
 
             console.log("Made it here");
 
+            // PHYSICS ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             //Dragging behavior with either pointer or VR controller
             const pointerDragBehavior = new BABYLON.PointerDragBehavior({ dragAxis: new BABYLON.Vector3(0, 1, 0) });
             pointerDragBehavior.useObjectOrientationForDragging = false;
@@ -130,6 +129,7 @@
             })
             sphere.addBehavior(pointerDragBehavior);
 
+            // Initialize Havok Physics plugin
             // initialize plugin
             var havokInstance = await HavokPhysics();
             var hk = new BABYLON.HavokPlugin(true, havokInstance);
@@ -156,18 +156,23 @@
             skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
             skybox.material = skyboxMaterial;
 
+            // Create a particle system and attach to sphere
+            const particleSystem = new BABYLON.ParticleSystem("particles", 2000);
+            particleSystem.particleTexture = new BABYLON.Texture("./textures/flare2.png");
+            particleSystem.emitter = sphere;
+            particleSystem.start();
+
             // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             //WebXR Helpers - Can only be served over HTTPS. Disable this during development.
-            scene.createDefaultEnvironment();
-            const xrHelper = await scene.createDefaultXRExperienceAsync();
+            // scene.createDefaultEnvironment();
+            // const xrHelper = await scene.createDefaultXRExperienceAsync();
 
-            //Change the camera height in XR
-            xrHelper.baseExperience.onStateChangedObservable.add((state) => {
-                if (state === BABYLON.WebXRState.IN_XR) {
-                    scene.activeCamera.position.y = 4;
-                }
-
-            });
+            // //Change the camera height in XR
+            // xrHelper.baseExperience.onStateChangedObservable.add((state) => {
+            //     if (state === BABYLON.WebXRState.IN_XR) {
+            //         scene.activeCamera.position.y = 4;
+            //     }
+            // });
 
             // const sessionManager = new WebXRSessionManager(scene);
             // const sessionSupported = await WebXRSessionManager.IsSessionSupportedAsync('immersive-vr');
