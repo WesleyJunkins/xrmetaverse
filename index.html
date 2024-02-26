@@ -139,9 +139,10 @@
             scene.createDefaultEnvironment();
             const xrHelper = await scene.createDefaultXRExperienceAsync();
 
+            //Change the camera height in XR
             xrHelper.baseExperience.onStateChangedObservable.add((state) => {
                 if (state === BABYLON.WebXRState.IN_XR) {
-                    scene.activeCamera.position.y = 5;
+                    scene.activeCamera.position.y = 4;
                 }
 
             });
