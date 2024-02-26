@@ -141,15 +141,15 @@ async function createScene() {
 
     // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //WebXR Helpers - Can only be served over HTTPS. Disable this during development.
-    // scene.createDefaultEnvironment();
-    // const xrHelper = await scene.createDefaultXRExperienceAsync();
+    scene.createDefaultEnvironment();
+    const xrHelper = await scene.createDefaultXRExperienceAsync();
 
-    // //Change the camera height in XR
-    // xrHelper.baseExperience.onStateChangedObservable.add((state) => {
-    //     if (state === BABYLON.WebXRState.IN_XR) {
-    //         scene.activeCamera.position.y = 4;
-    //     }
-    // });
+    //Change the camera height in XR
+    xrHelper.baseExperience.onStateChangedObservable.add((state) => {
+        if (state === BABYLON.WebXRState.IN_XR) {
+            scene.activeCamera.position.y = 4;
+        }
+    });
     // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     return scene;
