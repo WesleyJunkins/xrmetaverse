@@ -105,7 +105,7 @@ async function createScene() {
 
     // Create a particle system and attach to sphere
     const particleSystem = new BABYLON.ParticleSystem("particles", 2000);
-    particleSystem.particleTexture = new BABYLON.Texture("./textures/flare2.png");
+    particleSystem.particleTexture = new BABYLON.Texture("./textures/Flare2.png");
     particleSystem.emitter = sphere;
     particleSystem.start();
 
