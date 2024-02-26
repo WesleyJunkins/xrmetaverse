@@ -20,7 +20,7 @@ async function createScene() {
     var camera = new BABYLON.UniversalCamera("Camera1", new BABYLON.Vector3(0, 4, 0), scene);
 
     // This targets the camera to look outward
-    camera.setTarget(new BABYLON.Vector3(0, 3, 10));
+    camera.setTarget(new BABYLON.Vector3(0, 4, 10));
 
     // This attaches the camera to the canvas
     camera.attachControl(canvas, true);
@@ -39,6 +39,8 @@ async function createScene() {
     sphere.material.diffuseTexture = sphereTexture;
     sphere.position.y = 6;
     sphere.position.z = 5;
+    var hl = new BABYLON.HighlightLayer("hl1", scene);
+	hl.addMesh(sphere, BABYLON.Color3.Green()); //Could probably use this with a mouse cursor hover selection functionality.
 
     // Create a cylinder
     const cylinder = BABYLON.MeshBuilder.CreateCylinder("cylinder", { height: 3 });
@@ -53,10 +55,31 @@ async function createScene() {
     var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene);
     let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
     ground.material = groundMaterial;
-    let groundTexture = new BABYLON.Texture("./textures/albedo.png", scene);
+    let groundTexture = new BABYLON.Texture("./textures/albedo.png");
     ground.material.diffuseTexture = groundTexture;
 
-    console.log("Made it here");
+    // GUI ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    var manager = new BABYLON.GUI.GUI3DManager(scene);
+    var panel = new BABYLON.GUI.SpherePanel();
+    panel.margin = 0.2;
+    manager.addControl(panel);
+    var anchor = new BABYLON.TransformNode("");
+    panel.linkToTransformNode(anchor);
+    panel.position.z = 8;
+    panel.position.y = 4;
+    //Add a button for every link we have. (Complete this functionality later)
+    var addButton = function() {
+        var button = new BABYLON.GUI.HolographicButton("orientation");
+        panel.addControl(button);
+
+        button.text = "Button #" + panel.children.length;
+    }
+    panel.blockLayout = true;
+    for (var index = 0; index < 10; index++) {
+        addButton();    
+    }
+    panel.blockLayout = false;
+    // GUI ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     // PHYSICS ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //Dragging behavior with either pointer or VR controller
@@ -75,6 +98,13 @@ async function createScene() {
         console.log(event);
     })
     sphere.addBehavior(pointerDragBehavior);
+
+    //Restrict camera movement
+    scene.onPointerObservable.add((eventData) => {
+        // This will block out vertical rotation
+        // For blocking out horizontal rotation, simply use y instead of x
+        camera.cameraRotation.x = 0;
+    });
 
     // Initialize Havok Physics plugin
     // initialize plugin
@@ -120,27 +150,6 @@ async function createScene() {
             scene.activeCamera.position.y = 4;
         }
     });
-
-    // const sessionManager = new WebXRSessionManager(scene);
-    // const sessionSupported = await WebXRSessionManager.IsSessionSupportedAsync('immersive-vr');
-    // if (!supported) {
-    //     console.log("WebXR Session not supported");
-    // };
-    // sessionManager.initializeSessionAsync('immersive-vr' /*, xrSessionInit */);
-    // const referenceSpace = sessionManager.setReferenceSpaceTypeAsync( /*referenceSpaceType = 'local-floor'*/);
-    // const renderTarget = sessionManager.getWebXRRenderTarget( /*outputCanvasOptions: WebXRManagedOutputCanvasOptions*/);
-    // const xrWebGLLayer = renderTarget.initializeXRLayerAsync(this.sessionManager.session);
-    // sessionManager.runXRRenderLoop();
-    // // height change - move the reference space negative 2 units (up two units):
-    // const heightChange = new XRRigidTransform({
-    //     x: 0,
-    //     y: -18,
-    //     z: 0
-    // });
-    // // get a new reference space object using the current reference space
-    // const newReferenceSpace = xrSession.referenceSpace.getOffsetReferenceSpace(heightChange);
-    // // update the session manager to start using the new space:
-    // xrSession.referenceSpace = newReferenceSpace;
     // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     return scene;
