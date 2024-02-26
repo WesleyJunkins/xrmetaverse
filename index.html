@@ -94,6 +94,23 @@
 
             console.log("Made it here");
 
+            //Dragging behavior with either pointer or VR controller
+            const pointerDragBehavior = new BABYLON.PointerDragBehavior({ dragAxis: new BABYLON.Vector3(0, 1, 0) });
+            pointerDragBehavior.useObjectOrientationForDragging = false;
+            pointerDragBehavior.onDragStartObservable.add((event) => {
+                console.log("dragStart");
+                console.log(event);
+            })
+            pointerDragBehavior.onDragObservable.add((event) => {
+                console.log("drag");
+                console.log(event);
+            })
+            pointerDragBehavior.onDragEndObservable.add((event) => {
+                console.log("dragEnd");
+                console.log(event);
+            })
+            sphere.addBehavior(pointerDragBehavior);
+
             // initialize plugin
             var havokInstance = await HavokPhysics();
             var hk = new BABYLON.HavokPlugin(true, havokInstance);
