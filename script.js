@@ -43,12 +43,12 @@ async function createScene() {
 	hl.addMesh(sphere, BABYLON.Color3.Green()); //Could probably use this with a mouse cursor hover selection functionality.
 
     // Create a cylinder
-    const cylinder = BABYLON.MeshBuilder.CreateCylinder("cylinder", { height: 3 });
+    const cylinder = BABYLON.MeshBuilder.CreateCylinder("cylinder", { height: 2.5 });
     let cylinderMaterial = new BABYLON.StandardMaterial("Cylinder Material", scene);
     cylinder.material = cylinderMaterial;
-    let cylinderTexture = new BABYLON.Texture("./textures/albedo.png", scene);
+    let cylinderTexture = new BABYLON.Texture("./textures/amiga.jpg", scene);
     cylinder.material.diffuseTexture = cylinderTexture;
-    cylinder.position.y = 1.5;
+    cylinder.position.y = 1.25;
     cylinder.position.z = 5;
 
     // Our built-in 'ground' shape.
@@ -65,7 +65,7 @@ async function createScene() {
     manager.addControl(panel);
     var anchor = new BABYLON.TransformNode("");
     panel.linkToTransformNode(anchor);
-    panel.position.z = 8;
+    panel.position.z = 6;
     panel.position.y = 4;
     //Add a button for every link we have. (Complete this functionality later)
     var addButton = function() {
@@ -141,15 +141,15 @@ async function createScene() {
 
     // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //WebXR Helpers - Can only be served over HTTPS. Disable this during development.
-    scene.createDefaultEnvironment();
-    const xrHelper = await scene.createDefaultXRExperienceAsync();
+    // scene.createDefaultEnvironment();
+    // const xrHelper = await scene.createDefaultXRExperienceAsync();
 
-    //Change the camera height in XR
-    xrHelper.baseExperience.onStateChangedObservable.add((state) => {
-        if (state === BABYLON.WebXRState.IN_XR) {
-            scene.activeCamera.position.y = 4;
-        }
-    });
+    // //Change the camera height in XR
+    // xrHelper.baseExperience.onStateChangedObservable.add((state) => {
+    //     if (state === BABYLON.WebXRState.IN_XR) {
+    //         scene.activeCamera.position.y = 4;
+    //     }
+    // });
     // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     return scene;
