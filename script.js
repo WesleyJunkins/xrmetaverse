@@ -1,4 +1,6 @@
 var canvas = document.getElementById("renderCanvas");
+var panel;
+var repoLinks = [];
 
 var startRenderLoop = function (engine, canvas) {
     engine.runRenderLoop(function () {
@@ -40,7 +42,7 @@ async function createScene() {
     sphere.position.y = 6;
     sphere.position.z = 5;
     var hl = new BABYLON.HighlightLayer("hl1", scene);
-	hl.addMesh(sphere, BABYLON.Color3.Green()); //Could probably use this with a mouse cursor hover selection functionality.
+    hl.addMesh(sphere, BABYLON.Color3.Green()); //Could probably use this with a mouse cursor hover selection functionality.
 
     // Create a cylinder
     const cylinder = BABYLON.MeshBuilder.CreateCylinder("cylinder", { height: 2.5 });
@@ -59,26 +61,48 @@ async function createScene() {
     ground.material.diffuseTexture = groundTexture;
 
     // GUI ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    var manager = new BABYLON.GUI.GUI3DManager(scene);
-    var panel = new BABYLON.GUI.SpherePanel();
-    panel.margin = 0.2;
-    manager.addControl(panel);
-    var anchor = new BABYLON.TransformNode("");
-    panel.linkToTransformNode(anchor);
-    panel.position.z = 6;
-    panel.position.y = 4;
-    //Add a button for every link we have. (Complete this functionality later)
-    var addButton = function() {
+    //Read from repoLinks file
+    fetch("repoLinks.txt").then(response => response.text()).then(data => {
+        repoLinks = data.split("\n");
+        console.log(repoLinks);
+    }).catch(error => console.error("Error reading file: ", error));
+    //Read from repoNames file
+    fetch("repoNames.txt").then(response => response.text()).then(data => {
+        const nameLines = data.split("\n");
+        console.log(nameLines);
+        processNameLines(nameLines);
+    }).catch(error => console.error("Error reading file: ", error));
+
+    function processNameLines(nameLines) {
+        var manager = new BABYLON.GUI.GUI3DManager(scene);
+        panel = new BABYLON.GUI.SpherePanel();
+        panel.margin = 0.2;
+        manager.addControl(panel);
+        var anchor = new BABYLON.TransformNode("");
+        panel.linkToTransformNode(anchor);
+        panel.position.z = 6;
+        panel.position.y = 4;
+
+        //Add buttons for each name in nameLines
+        nameLines.forEach(function (name, index) {
+            addButton(name, index);
+        });
+    };
+
+    //Function to add a button to the GUI
+    function addButton(name, index) {
         var button = new BABYLON.GUI.HolographicButton("orientation");
         panel.addControl(button);
-
-        button.text = "Button #" + panel.children.length;
-    }
-    panel.blockLayout = true;
-    for (var index = 0; index < 10; index++) {
-        addButton();    
-    }
-    panel.blockLayout = false;
+        button.text = name;
+        button.onPointerClickObservable.add(function () {
+            console.log("Button #" + index + " clicked");
+            if (repoLinks[index]) {
+                window.open(repoLinks[index], '_blank'); //When clicked, open the link in a new tab.
+            } else {
+                console.log("No linked repo");
+            };
+        })
+    };
     // GUI ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     // PHYSICS ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,15 +165,15 @@ async function createScene() {
 
     // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //WebXR Helpers - Can only be served over HTTPS. Disable this during development.
-    scene.createDefaultEnvironment();
-    const xrHelper = await scene.createDefaultXRExperienceAsync();
+    // scene.createDefaultEnvironment();
+    // const xrHelper = await scene.createDefaultXRExperienceAsync();
 
-    //Change the camera height in XR
-    xrHelper.baseExperience.onStateChangedObservable.add((state) => {
-        if (state === BABYLON.WebXRState.IN_XR) {
-            scene.activeCamera.position.y = 4;
-        }
-    });
+    // //Change the camera height in XR
+    // xrHelper.baseExperience.onStateChangedObservable.add((state) => {
+    //     if (state === BABYLON.WebXRState.IN_XR) {
+    //         scene.activeCamera.position.y = 4;
+    //     }
+    // });
     // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     return scene;
