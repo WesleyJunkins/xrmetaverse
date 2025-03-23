@@ -1,5 +1,4 @@
 https://www.google.com/
 https://wesleyjunkins.github.io/3D-Grapher/
 https://wesleyjunkins.github.io/BDR-XR/
-https://wesleyjunkins.github.io/testDroneXR/
 https://wesleyjunkins.github.io/BDR-XR-Connector/
