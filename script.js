@@ -1,6 +1,9 @@
 var canvas = document.getElementById("renderCanvas");
 var panel;
 var repoLinks = [];
+var repoNames = [];
+var projectManagerPanel;
+var projectButtonsPanel;
 
 var startRenderLoop = function (engine, canvas) {
     engine.runRenderLoop(function () {
@@ -33,28 +36,8 @@ async function createScene() {
     // Default intensity is 1. Let's dim the light a small amount
     light.intensity = 0.7;
 
-    // Our built-in 'sphere' shape.
-    var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.7, segments: 32 }, scene);
-    let sphereMaterial = new BABYLON.StandardMaterial("Sphere Material", scene);
-    sphere.material = sphereMaterial;
-    let sphereTexture = new BABYLON.Texture("./textures/rockn.png", scene);
-    sphere.material.diffuseTexture = sphereTexture;
-    sphere.position.y = 6;
-    sphere.position.z = 5;
-    var hl = new BABYLON.HighlightLayer("hl1", scene);
-    hl.addMesh(sphere, BABYLON.Color3.Green()); //Could probably use this with a mouse cursor hover selection functionality.
-
-    // Create a cylinder
-    const cylinder = BABYLON.MeshBuilder.CreateCylinder("cylinder", { height: 2.5 });
-    let cylinderMaterial = new BABYLON.StandardMaterial("Cylinder Material", scene);
-    cylinder.material = cylinderMaterial;
-    let cylinderTexture = new BABYLON.Texture("./textures/amiga.jpg", scene);
-    cylinder.material.diffuseTexture = cylinderTexture;
-    cylinder.position.y = 1.25;
-    cylinder.position.z = 5;
-
     // Our built-in 'ground' shape.
-    var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene);
+    var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 25, height: 25 }, scene);
     let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
     ground.material = groundMaterial;
     let groundTexture = new BABYLON.Texture("./textures/albedo.png");
@@ -63,73 +46,258 @@ async function createScene() {
     // GUI ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //Read from repoLinks file
     fetch("repoLinks.txt").then(response => response.text()).then(data => {
-        repoLinks = data.split("\n");
+        repoLinks = data.split("\n").filter(link => link.trim() !== "");
         console.log(repoLinks);
     }).catch(error => console.error("Error reading file: ", error));
+
     //Read from repoNames file
     fetch("repoNames.txt").then(response => response.text()).then(data => {
-        const nameLines = data.split("\n");
-        console.log(nameLines);
-        processNameLines(nameLines);
+        repoNames = data.split("\n").filter(name => name.trim() !== "");
+        console.log(repoNames);
+        processNameLines(repoNames);
     }).catch(error => console.error("Error reading file: ", error));
 
     function processNameLines(nameLines) {
-        var manager = new BABYLON.GUI.GUI3DManager(scene);
-        panel = new BABYLON.GUI.SpherePanel();
-        panel.margin = 0.2;
-        manager.addControl(panel);
-        var anchor = new BABYLON.TransformNode("");
-        panel.linkToTransformNode(anchor);
-        panel.position.z = 6;
-        panel.position.y = 4;
+        // Check localStorage for backup data
+        const savedNames = localStorage.getItem('repoNames');
+        const savedLinks = localStorage.getItem('repoLinks');
+        
+        if (savedNames && savedLinks) {
+            repoNames = JSON.parse(savedNames);
+            repoLinks = JSON.parse(savedLinks);
+        }
 
-        //Add buttons for each name in nameLines
-        nameLines.forEach(function (name, index) {
-            addButton(name, index);
+        // Create 2D GUI manager for the management panel
+        var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        
+        // Create management panel for adding new projects
+        projectManagerPanel = new BABYLON.GUI.StackPanel();
+        projectManagerPanel.width = "300px";
+        projectManagerPanel.height = "200px";
+        projectManagerPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+        projectManagerPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+        projectManagerPanel.paddingTop = "20px";
+        projectManagerPanel.paddingRight = "20px";
+        advancedTexture.addControl(projectManagerPanel);
+
+        // Add form elements
+        var nameInput = new BABYLON.GUI.InputText();
+        nameInput.width = "200px";
+        nameInput.height = "40px";
+        nameInput.placeholderText = "Project Name";
+        nameInput.background = "white";
+        nameInput.color = "black";
+        nameInput.focusedBackground = "white";
+        nameInput.focusedColor = "black";
+        nameInput.hoveredBackground = "white";
+        nameInput.hoveredColor = "black";
+        projectManagerPanel.addControl(nameInput);
+
+        var linkInput = new BABYLON.GUI.InputText();
+        linkInput.width = "200px";
+        linkInput.height = "40px";
+        linkInput.placeholderText = "Project Link";
+        linkInput.background = "white";
+        linkInput.color = "black";
+        linkInput.focusedBackground = "white";
+        linkInput.focusedColor = "black";
+        linkInput.hoveredBackground = "white";
+        linkInput.hoveredColor = "black";
+        projectManagerPanel.addControl(linkInput);
+
+        var addButton = BABYLON.GUI.Button.CreateSimpleButton("addButton", "Add Project");
+        addButton.width = "200px";
+        addButton.height = "40px";
+        addButton.color = "white";
+        addButton.background = "green";
+        addButton.onPointerClickObservable.add(() => {
+            const name = nameInput.text;
+            const link = linkInput.text;
+            if (name && link) {
+                addNewProject(name, link);
+                nameInput.text = "";
+                linkInput.text = "";
+            }
         });
-    };
+        projectManagerPanel.addControl(addButton);
 
-    //Function to add a button to the GUI
-    function addButton(name, index) {
-        var button = new BABYLON.GUI.HolographicButton("orientation");
-        panel.addControl(button);
+        // Create 3D GUI manager for the holographic buttons
+        var manager = new BABYLON.GUI.GUI3DManager(scene);
+        
+        // Create main panel for project buttons
+        projectButtonsPanel = new BABYLON.GUI.PlanePanel();
+        projectButtonsPanel.margin = 0.2;
+        manager.addControl(projectButtonsPanel);
+        
+        // Create an anchor for the panel
+        var anchor = new BABYLON.TransformNode("anchor");
+        projectButtonsPanel.linkToTransformNode(anchor);
+        projectButtonsPanel.position.z = 12; // Move panel further back
+        projectButtonsPanel.position.y = 4; // Lower the panel height
+        projectButtonsPanel.position.x = 0; // Center the panel
+        projectButtonsPanel.rotation = new BABYLON.Vector3(0, Math.PI, 0); // Make panel face the camera
+
+        // Create 16 fixed position buttons (2 rows of 8)
+        for (let i = 0; i < 30; i++) {
+            addHolographicButton(i < nameLines.length ? nameLines[i] : "", i);
+        }
+    }
+
+    function addNewProject(name, link) {
+        // Add to arrays
+        repoNames.push(name);
+        repoLinks.push(link);
+
+        // Update the button at the current index
+        const index = repoNames.length - 1;
+        if (index < 16) { // Allow up to 16 projects (2 rows)
+            updateHolographicButton(index, name);
+        }
+
+        // Update files
+        updateFiles();
+    }
+
+    function updateHolographicButton(index, name) {
+        const button = projectButtonsPanel.children[index];
+        if (button) {
+            button.text = name;
+        }
+    }
+
+    function updateFiles() {
+        // Update repoNames.txt
+        fetch("repoNames.txt", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: repoNames.join('\n')
+        }).catch(error => {
+            console.error("Error updating names file: ", error);
+            // Store in localStorage as backup
+            localStorage.setItem('repoNames', JSON.stringify(repoNames));
+        });
+
+        // Update repoLinks.txt
+        fetch("repoLinks.txt", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: repoLinks.join('\n')
+        }).catch(error => {
+            console.error("Error updating links file: ", error);
+            // Store in localStorage as backup
+            localStorage.setItem('repoLinks', JSON.stringify(repoLinks));
+        });
+    }
+
+    //Function to add a holographic button to the GUI
+    function addHolographicButton(name, index) {
+        var button = new BABYLON.GUI.HolographicButton("button" + index);
         button.text = name;
+        button.scale = 0.6; // Make buttons slightly smaller to fit better
+        
+        // Calculate fixed position for each button
+        const spacing = 1.0; // Space between buttons
+        const rowSpacing = 1.2; // Space between rows
+        const startX = -3.5; // Starting X position
+        const startY = 0.5; // Starting Y position for first row
+        
+        // Calculate row and column
+        const row = Math.floor(index / 8);
+        const col = index % 8;
+        
+        // Position button based on row and column
+        button.position = new BABYLON.Vector3(
+            startX + (col * spacing), // X position based on column
+            startY - (row * rowSpacing), // Y position based on row
+            0
+        );
+
+        // Add hover animation
+        button.onPointerEnterObservable.add(() => {
+            BABYLON.Animation.CreateAndStartAnimation(
+                "hoverAnimation" + index,
+                button,
+                "scale",
+                30,
+                10,
+                button.scale,
+                0.8,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+        });
+
+        // Add hover out animation
+        button.onPointerOutObservable.add(() => {
+            BABYLON.Animation.CreateAndStartAnimation(
+                "hoverOutAnimation" + index,
+                button,
+                "scale",
+                30,
+                10,
+                button.scale,
+                0.6,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+        });
+
+        // Add click animation
         button.onPointerClickObservable.add(function () {
-            console.log("Button #" + index + " clicked");
-            if (repoLinks[index]) {
-                window.open(repoLinks[index], '_blank'); //When clicked, open the link in a new tab.
-            } else {
-                console.log("No linked repo");
-            };
-        })
-    };
+            // Scale down animation
+            BABYLON.Animation.CreateAndStartAnimation(
+                "clickAnimation" + index,
+                button,
+                "scale",
+                30,
+                5,
+                button.scale,
+                0.4,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+
+            // Scale up animation
+            BABYLON.Animation.CreateAndStartAnimation(
+                "clickUpAnimation" + index,
+                button,
+                "scale",
+                30,
+                5,
+                0.4,
+                0.6,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+
+            // Open link after animation
+            setTimeout(() => {
+                console.log("Button #" + index + " clicked");
+                if (repoLinks[index]) {
+                    window.open(repoLinks[index], '_blank');
+                } else {
+                    console.log("No linked repo");
+                }
+            }, 200); // Wait for animation to complete
+        });
+
+        // Add floating animation
+        BABYLON.Animation.CreateAndStartAnimation(
+            "floatAnimation" + index,
+            button,
+            "position.y",
+            30,
+            2000,
+            button.position.y,
+            button.position.y + 0.1,
+            BABYLON.Animation.ANIMATIONLOOPMODE_RELATIVE
+        );
+
+        projectButtonsPanel.addControl(button);
+    }
     // GUI ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     // PHYSICS ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //Dragging behavior with either pointer or VR controller
-    const pointerDragBehavior = new BABYLON.PointerDragBehavior({ dragAxis: new BABYLON.Vector3(0, 1, 0) });
-    pointerDragBehavior.useObjectOrientationForDragging = false;
-    pointerDragBehavior.onDragStartObservable.add((event) => {
-        console.log("dragStart");
-        console.log(event);
-    })
-    pointerDragBehavior.onDragObservable.add((event) => {
-        console.log("drag");
-        console.log(event);
-    })
-    pointerDragBehavior.onDragEndObservable.add((event) => {
-        console.log("dragEnd");
-        console.log(event);
-    })
-    sphere.addBehavior(pointerDragBehavior);
-
-    //Restrict camera movement
-    scene.onPointerObservable.add((eventData) => {
-        // This will block out vertical rotation
-        // For blocking out horizontal rotation, simply use y instead of x
-        camera.cameraRotation.x = 0;
-    });
-
     // Initialize Havok Physics plugin
     // initialize plugin
     var havokInstance = await HavokPhysics();
@@ -137,13 +305,7 @@ async function createScene() {
     // enable physics in the scene with a gravity
     scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), hk);
 
-    // Create a sphere shape and the associated body. Size will be determined automatically.
-    var sphereAggregate = new BABYLON.PhysicsAggregate(sphere, BABYLON.PhysicsShapeType.SPHERE, { mass: 1, restitution: 0.6 }, scene);
-
-    // Create a cylinder shape
-    var cylinderAggregate = new BABYLON.PhysicsAggregate(cylinder, BABYLON.PhysicsShapeType.CYLINDER, { mass: 0, restitution: 0 }, scene);
-
-    // Create a static box shape.
+    // Create a static box shape for the ground
     var groundAggregate = new BABYLON.PhysicsAggregate(ground, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene);
     // PHYSICS ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -157,24 +319,8 @@ async function createScene() {
     skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
     skybox.material = skyboxMaterial;
 
-    // Create a particle system and attach to sphere
-    const particleSystem = new BABYLON.ParticleSystem("particles", 2000);
-    particleSystem.particleTexture = new BABYLON.Texture("./textures/Flare2.png");
-    particleSystem.emitter = sphere;
-    particleSystem.start();
-
-    // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //WebXR Helpers - Can only be served over HTTPS. Disable this during development.
+    // Create default environment
     scene.createDefaultEnvironment();
-    const xrHelper = await scene.createDefaultXRExperienceAsync();
-
-    //Change the camera height in XR
-    xrHelper.baseExperience.onStateChangedObservable.add((state) => {
-        if (state === BABYLON.WebXRState.IN_XR) {
-            scene.activeCamera.position.y = 4;
-        }
-    });
-    // EXTENDED REALITY ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     return scene;
 };
